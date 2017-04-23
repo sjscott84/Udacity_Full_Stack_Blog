@@ -5,4 +5,9 @@
 <body>
 	<h1>{{ title }}</h1>
 	<p>{{ content }}</p>
+	<p>{{ error }}</p>
+	<form method="POST">
+		<input type="hidden" name="post_id" value="{{post_id}}">
+		<input type="submit" value="Delete">
+	</form>
 </body>

@@ -17,18 +17,15 @@ import webapp2
 import re
 import hashlib
 import hmac
+import time
 
 import user
 import blogPost
 
 from google.appengine.ext import db
 
-def someFunction():
-  print "Click"
-
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
-jinja_env.globals['someFunction'] = someFunction
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PW_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
@@ -62,7 +59,6 @@ class MainPage(Handler):
       self.redirect("/login")
 
   def post(self):
-    print "click"
     post_id = self.request.get('post_id')
     key = str(post_id)
     self.redirect('/'+key, post_id)
@@ -86,7 +82,16 @@ class NewPost(Handler):
 class PostPage(Handler):
   def get(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
-    self.render("post_page.html", title = post.title, content = post.post)
+    self.render("post_page.html", title = post.title, content = post.post, post_id = post_id)
+
+  def post(self, post_id):
+    post = blogPost.Post.get_by_id(int(post_id))
+    if post.created_by == self.request.cookies.get('user_id').split('|')[0]:
+      post.delete()
+      time.sleep(1)
+      self.redirect('/')
+    else:
+      self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not delete this post")
 
 class SignUp(Handler):
   def get(self):
