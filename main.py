@@ -23,8 +23,12 @@ import blogPost
 
 from google.appengine.ext import db
 
+def someFunction():
+  print "Click"
+
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
+jinja_env.globals['someFunction'] = someFunction
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PW_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
@@ -32,10 +36,6 @@ SECRET = "tGhlsdmn92jbe"
 
 def make_secure_hash(var):
   return '%s|%s' % (var, hmac.new(SECRET, var).hexdigest())
-
-def create_cookie(username):
-  user_hash = str(make_secure_hash(username))
-  self.response.headers.add_header('Set-Cookie', 'user_id='+user_hash)
 
 class Handler(webapp2.RequestHandler):
   def write(self, *a, **kw):
@@ -54,9 +54,18 @@ class Handler(webapp2.RequestHandler):
 
 class MainPage(Handler):
   def get(self):
-    posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
-    print posts
-    self.render("home.html", posts = posts)
+    logged_in_user = self.request.cookies.get('user_id')
+    if logged_in_user:
+      posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
+      self.render("home.html", posts = posts)
+    else:
+      self.redirect("/login")
+
+  def post(self):
+    print "click"
+    post_id = self.request.get('post_id')
+    key = str(post_id)
+    self.redirect('/'+key, post_id)
 
 class NewPost(Handler):
   def get(self):

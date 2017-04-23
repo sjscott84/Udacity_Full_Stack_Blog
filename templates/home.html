@@ -7,8 +7,12 @@
 	<br>
 	<div>
 		{% for post in posts %}
-			<h4>{{post.title}}</h4>
-			<p>{{post.post}}</p>
+			<form method="POST">
+				<h4 name="title">{{post.title}}</h4>
+				<p name="post">{{post.post}}</p>
+				<input type="hidden" name="post_id" value="{{post.key().id()}}">
+				<input type="submit" value="Edit/Delete" >
+			</form>
 		{% endfor %}
 	</div>
 </body>
