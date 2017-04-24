@@ -34,6 +34,7 @@ SECRET = "tGhlsdmn92jbe"
 def make_secure_hash(var):
   return '%s|%s' % (var, hmac.new(SECRET, var).hexdigest())
 
+#Handler class to make rendering pages easier
 class Handler(webapp2.RequestHandler):
   def write(self, *a, **kw):
     self.response.out.write(*a, **kw)
@@ -49,53 +50,7 @@ class Handler(webapp2.RequestHandler):
     user_hash = str(make_secure_hash(username))
     self.response.headers.add_header('Set-Cookie', 'user_id='+user_hash)
 
-class MainPage(Handler):
-  def get(self):
-    logged_in_user = self.request.cookies.get('user_id')
-    if logged_in_user:
-      posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
-      self.render("home.html", posts = posts)
-    else:
-      self.redirect("/login")
-
-  def post(self):
-    post_id = self.request.get('post_id')
-    key = str(post_id)
-    self.redirect('/'+key, post_id)
-
-class NewPost(Handler):
-  def get(self):
-    self.render("new_entry.html")
-
-  def post(self):
-    title = self.request.get('subject')
-    post = self.request.get('content')
-    created_by = self.request.cookies.get('user_id').split('|')[0]
-    if title and post:
-      p = blogPost.Post(title = title, post = post, created_by = created_by)
-      p.put()
-      key = str(p.key().id())
-      self.redirect('/'+key, p.key().id())
-    else:
-      self.render("new_entry.html", error="Enter a title and a post")
-
-class PostPage(Handler):
-  def get(self, post_id):
-    post = blogPost.Post.get_by_id(int(post_id))
-    self.render("post_page.html", title = post.title, content = post.post, post_id = post_id)
-
-  def post(self, post_id):
-    post = blogPost.Post.get_by_id(int(post_id))
-    if not post.created_by == self.request.cookies.get('user_id').split('|')[0]:
-      self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not edit or delete this post")
-    else:
-      if self.request.get('edit'):
-        self.redirect("/edit_post?post=" + str(post_id))
-      else:
-        post.delete()
-        time.sleep(1)
-        self.redirect('/')
-
+#Create an account
 class SignUp(Handler):
   def get(self):
     self.render("signin.html")
@@ -159,19 +114,14 @@ class Register(SignUp):
     else:
       u = user.User.register(self.username, self.password, self.email)
       self.create_cookie(self.username)
-      self.redirect('/welcome')
+      self.redirect('/')
 
-class Welcome(Handler):
-  def get(self):
-    username = self.request.cookies.get('user_id').split('|')[0]
-    self.render("welcome.html", username = username)
-
+#Login to blog
 class Login(Handler):
   def get(self):
     h = self.request.cookies.get('user_id')
     if h:
-      #print h .split('|')[0]
-      self.redirect('/welcome')
+      self.redirect('/')
     else:
       self.render("login.html")
 
@@ -185,11 +135,57 @@ class Login(Handler):
     else:
       self.render("login.html", error = "Invalid login")
 
-class Logout(Handler):
+#Home page displaying last 10 blog posts
+class MainPage(Handler):
   def get(self):
-    self.response.headers.add_header('Set-Cookie', 'user_id=;Path="/"')
-    self.redirect('/login')
+    logged_in_user = self.request.cookies.get('user_id')
+    if logged_in_user:
+      posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
+      self.render("home.html", posts = posts)
+    else:
+      self.redirect("/login")
 
+  def post(self):
+    post_id = self.request.get('post_id')
+    key = str(post_id)
+    self.redirect('/'+key, post_id)
+
+#Create a new blog post
+class NewPost(Handler):
+  def get(self):
+    self.render("new_entry.html")
+
+  def post(self):
+    title = self.request.get('subject')
+    post = self.request.get('content')
+    created_by = self.request.cookies.get('user_id').split('|')[0]
+    if title and post:
+      p = blogPost.Post(title = title, post = post, created_by = created_by)
+      p.put()
+      key = str(p.key().id())
+      self.redirect('/'+key, p.key().id())
+    else:
+      self.render("new_entry.html", error="Enter a title and a post")
+
+#Indivdual blog post page, this is where you can edit or delete a blog post
+class PostPage(Handler):
+  def get(self, post_id):
+    post = blogPost.Post.get_by_id(int(post_id))
+    self.render("post_page.html", title = post.title, content = post.post, post_id = post_id)
+
+  def post(self, post_id):
+    post = blogPost.Post.get_by_id(int(post_id))
+    if not post.created_by == self.request.cookies.get('user_id').split('|')[0]:
+      self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not edit or delete this post")
+    else:
+      if self.request.get('edit'):
+        self.redirect("/edit_post?post=" + str(post_id))
+      else:
+        post.delete()
+        time.sleep(1)
+        self.redirect('/')
+
+#Edit a blog post
 class EditPost(Handler):
   def get(self):
     post_id = self.request.get('post')
@@ -207,12 +203,17 @@ class EditPost(Handler):
     time.sleep(1)
     self.redirect('/')
 
+#Logout of blog
+class Logout(Handler):
+  def get(self):
+    self.response.headers.add_header('Set-Cookie', 'user_id=;Path="/"')
+    self.redirect('/login')
+
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/newpost', NewPost),
     ('/([0-9]+)', PostPage),
     ('/signup', Register),
-    ('/welcome', Welcome),
     ('/login', Login),
     ('/logout', Logout),
     ('/edit_post', EditPost)
