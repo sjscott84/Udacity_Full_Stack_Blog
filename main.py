@@ -86,12 +86,15 @@ class PostPage(Handler):
 
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
-    if post.created_by == self.request.cookies.get('user_id').split('|')[0]:
-      post.delete()
-      time.sleep(1)
-      self.redirect('/')
-    else:
+    if not post.created_by == self.request.cookies.get('user_id').split('|')[0]:
       self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not delete this post")
+    else:
+      if self.request.get('edit'):
+        self.redirect("/edit_post?post=" + str(post_id))
+      else:
+        post.delete()
+        time.sleep(1)
+        self.redirect('/')
 
 class SignUp(Handler):
   def get(self):
@@ -185,7 +188,24 @@ class Login(Handler):
 class Logout(Handler):
   def get(self):
     self.response.headers.add_header('Set-Cookie', 'user_id=;Path="/"')
-    self.redirect('/signup')
+    self.redirect('/login')
+
+class EditPost(Handler):
+  def get(self):
+    post_id = self.request.get('post')
+    post = blogPost.Post.get_by_id(int(post_id))
+    self.render("edit_post.html", title = post.title, content = post.post, post_id = post_id)
+
+  def post(self):
+    post_id = self.request.get('post')
+    post = blogPost.Post.get_by_id(int(post_id))
+    updated_title = self.request.get('title')
+    updated_content = self.request.get('content')
+    post.title = updated_title
+    post.post = updated_content
+    post.put()
+    time.sleep(1)
+    self.redirect('/')
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),
@@ -194,5 +214,6 @@ app = webapp2.WSGIApplication([
     ('/signup', Register),
     ('/welcome', Welcome),
     ('/login', Login),
-    ('/logout', Logout)
+    ('/logout', Logout),
+    ('/edit_post', EditPost)
 ], debug=True)
