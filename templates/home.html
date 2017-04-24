@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <head>
+	<link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
 	<title>Blog</title>
 </head>
 <body>
-	<h1>Blogs</h1>
+	<h1 class="post-heading">Blogs</h1>
 	<br>
 	<div>
 		{% for post in posts %}
 			<form method="POST">
-				<h4 name="title">{{post.title}}</h4>
-				<p name="post">{{post.post}}</p>
+				<h2 class="post-title" name="title">{{post.title}}</h2>
+				<p class="post-content" name="post">{{post.post}}</p>
+				<p class="post-date" name="created">{{post.created}}</p>
 				<input type="hidden" name="post_id" value="{{post.key().id()}}">
 				<input type="submit" value="Edit/Delete" >
 			</form>

@@ -87,7 +87,7 @@ class PostPage(Handler):
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
     if not post.created_by == self.request.cookies.get('user_id').split('|')[0]:
-      self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not delete this post")
+      self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not edit or delete this post")
     else:
       if self.request.get('edit'):
         self.redirect("/edit_post?post=" + str(post_id))

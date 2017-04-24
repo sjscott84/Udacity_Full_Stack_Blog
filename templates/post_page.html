@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <head>
+	<link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
 	<title>Blog</title>
 </head>
 <body>
-	<form method="POST">
-		<h4>{{title}}</h4>
-		<br>
-		<p>{{content}}</p>
-		<br>
-		<!--<input type="hidden" name="post_id" value="{{post_id}}">-->
-		<input type="submit" name="Delete" value="Delete">
-	</form>
-	<form method="POST">
-		<!--<input type="hidden" name="post_id" value="{{post_id}}">-->
-		<input type="hidden" name="edit" value="Edit">
-		<input type="submit" value="Edit">
-	</form>
-	<p>{{ error }}</p>
+	<h2>{{title}}</h2>
+	<p>{{content}}</p>
+	<div id="outer">
+		<form class="inner" method="POST">
+			<input type="submit" name="Delete" value="Delete">
+		</form>
+		<form class="inner" method="POST">
+			<input type="hidden" name="edit" value="Edit">
+			<input type="submit" value="Edit">
+		</form>
+	</div>
+	<p class="error">{{ error }}</p>
 </body>
