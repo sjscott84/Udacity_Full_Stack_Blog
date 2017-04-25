@@ -23,8 +23,8 @@
 	</form>
 	{% for comment in comments %}
 		<p>{{comment.comment}}</p>
-		{% if not comment.created_by == user %}
-			<p class="error">{{ comment_error }}</p>
+		{% if error_id == comment.key().id() %}
+			<p class="error">{{comment_error}}</p>
 		{% endif %}
 		<div id="outer">
 			<form class="inner" method="POST">

@@ -146,12 +146,21 @@ class MainPage(Handler):
       self.redirect("/login")
 
   def post(self):
-    post_id = self.request.get('post_id')
-    key = str(post_id)
-    #if not self.request.get('comment'):
-    self.redirect('/'+key, post_id)
-    #else:
-      #self.redirect("/view_comments?post=" + post_id)
+    if not self.request.get('like'):
+      key = str(self.request.get('post_id'))
+      self.redirect('/'+key, self.request.get('post_id'))
+    else:
+      post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
+      if not self.request.cookies.get('user_id').split('|')[0] == post.created_by:
+        updated_likes = post.likes + 1
+        post.likes = updated_likes
+        post.put()
+        time.sleep(1)
+        self.redirect('/')
+      else:
+        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
+        self.render("home.html", posts = posts, like_error = "You can not like your own post", 
+          error_id = int(self.request.get('post_id')))
 
 #Create a new blog post
 class NewPost(Handler):
@@ -163,7 +172,7 @@ class NewPost(Handler):
     post = self.request.get('content')
     created_by = self.request.cookies.get('user_id').split('|')[0]
     if title and post:
-      p = blogPost.Post(title = title, post = post, created_by = created_by)
+      p = blogPost.Post(title = title, post = post, created_by = created_by, likes = 0)
       p.put()
       key = str(p.key().id())
       self.redirect('/'+key, p.key().id())
@@ -179,6 +188,7 @@ class PostPage(Handler):
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
     user = self.request.cookies.get('user_id').split('|')[0]
+
     #Code to handle comments
     #Anyone can add a comment
     if self.request.get('add_comment'):
@@ -187,11 +197,14 @@ class PostPage(Handler):
     if self.request.get('delete_comment') or self.request.get('edit_comment'):
       comment = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
       if not comment.created_by == user:
-        self.render("post_page.html", title = post.title, user = user, content = post.post, post_id = post_id, comments = post.blog_comments, comment_error="You can not edit or delete this comment")
+        self.render("post_page.html", title = post.title, user = user, content = post.post, 
+          post_id = post_id, comments = post.blog_comments, comment_error="You can not edit or delete this comment",
+          error_id = comment.key().id())
       elif self.request.get('delete_comment'):
         comment.delete()
         time.sleep(1)
-        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, comments = post.blog_comments)
+        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, 
+          comments = post.blog_comments)
       elif self.request.get('edit_comment'):
         self.redirect('/edit_comment?comment='+str(self.request.get('comment_id')))
 
@@ -199,7 +212,9 @@ class PostPage(Handler):
     #Only post creators can edit or delete posts
     if self.request.get('edit_post') or self.request.get('delete_post'):
       if not post.created_by == user:
-        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, comments = post.blog_comments, error="You can not edit or delete this post")
+        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, 
+          comments = post.blog_comments, error="You can not edit or delete this post",
+          error_id = post_id)
       else:
         if self.request.get('edit_post'):
           self.redirect("/edit_post?post=" + str(post_id))
