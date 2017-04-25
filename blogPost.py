@@ -6,6 +6,7 @@ class Post(db.Model):
   post = db.TextProperty(required = True)
   created = db.DateTimeProperty(auto_now_add = True)
   created_by = db.StringProperty(required = True)
+  likes = db.IntegerProperty()
 
 class Comment(db.Model):
   post = db.ReferenceProperty(Post, collection_name = "blog_comments")

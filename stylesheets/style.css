@@ -64,7 +64,7 @@ textarea {
 
 input[type=submit] {
   margin-top: 10px;
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .main-title {
@@ -117,14 +117,12 @@ input[type=submit] {
     font-size: 12px;
 }
 
-#outer
-{
+#outer {
     width:100%;
     text-align: left;
     margin-top: 20px;
 }
-.inner
-{
+.inner {
     display: inline-block;
     margin-right: 10px;
 }

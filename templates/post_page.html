@@ -6,14 +6,37 @@
 <body>
 	<h2>{{title}}</h2>
 	<p>{{content}}</p>
+	<p class="error">{{ error }}</p>
 	<div id="outer">
 		<form class="inner" method="POST">
-			<input type="submit" name="Delete" value="Delete">
+			<input type="submit" name="delete_post" value="Delete Post">
 		</form>
 		<form class="inner" method="POST">
-			<input type="hidden" name="edit" value="Edit">
+			<input type="hidden" name="edit_post" value="Edit Post">
 			<input type="submit" value="Edit">
 		</form>
 	</div>
-	<p class="error">{{ error }}</p>
+	<h2>Comments</h2>
+	<form method="POST">
+		<input type="hidden" name="add_comment" value="Add Comment">
+		<input type="submit" value="Add Comment">
+	</form>
+	{% for comment in comments %}
+		<p>{{comment.comment}}</p>
+		{% if not comment.created_by == user %}
+			<p class="error">{{ comment_error }}</p>
+		{% endif %}
+		<div id="outer">
+			<form class="inner" method="POST">
+				<input type="hidden" name="comment_id" value="{{comment.key().id()}}">
+				<input type="hidden" name="delete_comment" value="Edit Comment">
+				<input type="submit" name="Delete" value="Delete Comment">
+			</form>
+			<form class="inner" method="POST">
+				<input type="hidden" name="comment_id" value="{{comment.key().id()}}">
+				<input type="hidden" name="edit_comment" value="Edit Comment">
+				<input type="submit" value="Edit Comment">
+			</form>
+		</div>
+	{% endfor %}
 </body>

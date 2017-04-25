@@ -141,9 +141,6 @@ class MainPage(Handler):
     logged_in_user = self.request.cookies.get('user_id')
     if logged_in_user:
       posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
-      for post in posts:
-        for comment in post.blog_comments:
-          print comment.comment
       self.render("home.html", posts = posts)
     else:
       self.redirect("/login")
@@ -151,10 +148,10 @@ class MainPage(Handler):
   def post(self):
     post_id = self.request.get('post_id')
     key = str(post_id)
-    if not self.request.get('comment'):
-      self.redirect('/'+key, post_id)
-    else:
-      self.redirect("/comment?post=" + post_id)
+    #if not self.request.get('comment'):
+    self.redirect('/'+key, post_id)
+    #else:
+      #self.redirect("/view_comments?post=" + post_id)
 
 #Create a new blog post
 class NewPost(Handler):
@@ -177,19 +174,39 @@ class NewPost(Handler):
 class PostPage(Handler):
   def get(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
-    self.render("post_page.html", title = post.title, content = post.post, post_id = post_id)
+    self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, comments = post.blog_comments)
 
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
-    if not post.created_by == self.request.cookies.get('user_id').split('|')[0]:
-      self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, error="You can not edit or delete this post")
-    else:
-      if self.request.get('edit'):
-        self.redirect("/edit_post?post=" + str(post_id))
-      else:
-        post.delete()
+    user = self.request.cookies.get('user_id').split('|')[0]
+    #Code to handle comments
+    #Anyone can add a comment
+    if self.request.get('add_comment'):
+      self.redirect('/comment?post='+str(post_id))
+    #Only comment creators can edit or delete comments
+    if self.request.get('delete_comment') or self.request.get('edit_comment'):
+      comment = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
+      if not comment.created_by == user:
+        self.render("post_page.html", title = post.title, user = user, content = post.post, post_id = post_id, comments = post.blog_comments, comment_error="You can not edit or delete this comment")
+      elif self.request.get('delete_comment'):
+        comment.delete()
         time.sleep(1)
-        self.redirect('/')
+        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, comments = post.blog_comments)
+      elif self.request.get('edit_comment'):
+        self.redirect('/edit_comment?comment='+str(self.request.get('comment_id')))
+
+    #Code to handle blog post
+    #Only post creators can edit or delete posts
+    if self.request.get('edit_post') or self.request.get('delete_post'):
+      if not post.created_by == user:
+        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, comments = post.blog_comments, error="You can not edit or delete this post")
+      else:
+        if self.request.get('edit_post'):
+          self.redirect("/edit_post?post=" + str(post_id))
+        elif self.request.get('delete_post'):
+          post.delete()
+          time.sleep(1)
+          self.redirect('/')
 
 #Edit a blog post
 class EditPost(Handler):
@@ -207,7 +224,7 @@ class EditPost(Handler):
     post.post = updated_content
     post.put()
     time.sleep(1)
-    self.redirect('/')
+    self.redirect('/'+str(post_id), post_id)
 
 #Comment on a blog post
 class Comment(Handler):
@@ -221,6 +238,22 @@ class Comment(Handler):
     post = blogPost.Post.get_by_id(int(post_id)) 
     c = blogPost.Comment(post = post, comment = comment, created_by = created_by)
     c.put()
+    time.sleep(1)
+    self.redirect('/'+ str(post_id))
+
+#Edit a comment
+class EditComment(Handler):
+  def get(self):
+    comment = blogPost.Comment.get_by_id(int(self.request.get('comment')))
+    self.render("edit_comment.html", comment = comment.comment, comment_id = self.request.get('comment'))
+
+  def post(self):
+    new_comment = self.request.get('content')
+    c = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
+    c.comment = new_comment
+    c.put()
+    time.sleep(1)
+    self.redirect('/'+ str(c.post.key().id()))
 
 #Logout of blog
 class Logout(Handler):
@@ -236,5 +269,6 @@ app = webapp2.WSGIApplication([
     ('/login', Login),
     ('/logout', Logout),
     ('/edit_post', EditPost),
-    ('/comment', Comment)
+    ('/comment', Comment),
+    ('/edit_comment', EditComment)
 ], debug=True)
