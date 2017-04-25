@@ -146,21 +146,26 @@ class MainPage(Handler):
       self.redirect("/login")
 
   def post(self):
-    if not self.request.get('like'):
+    #if not self.request.get('like') or self.request.get('unlike'):
+    if self.request.get('see_more'):
       key = str(self.request.get('post_id'))
       self.redirect('/'+key, self.request.get('post_id'))
     else:
       post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
-      if not self.request.cookies.get('user_id').split('|')[0] == post.created_by:
-        updated_likes = post.likes + 1
-        post.likes = updated_likes
-        post.put()
-        time.sleep(1)
-        self.redirect('/')
-      else:
+      if self.request.cookies.get('user_id').split('|')[0] == post.created_by:
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
         self.render("home.html", posts = posts, like_error = "You can not like your own post", 
           error_id = int(self.request.get('post_id')))
+      else:
+        if self.request.get('like'):
+          updated_likes = post.likes + 1
+        elif self.request.get('unlike'):
+          updated_likes = post.likes - 1
+
+        post.likes = updated_likes
+        post.put()
+        time.sleep(.1)
+        self.redirect('/')
 
 #Create a new blog post
 class NewPost(Handler):

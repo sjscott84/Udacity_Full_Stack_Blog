@@ -17,6 +17,7 @@
 			{% endif %}
 			<div id="outer">
 				<form class="inner" method="POST">
+					<input type="hidden" name="see_more" value="see_more">
 					<input type="hidden" name="post_id" value="{{post.key().id()}}">
 					<input type="submit" value="See More">
 				</form>
@@ -24,6 +25,11 @@
 					<input type="hidden" name="post_id" value="{{post.key().id()}}">
 					<input type="hidden" name="like" value="like">
 					<input type="submit" value="Like Post">
+				</form>
+				<form  class="inner" method="POST">
+					<input type="hidden" name="post_id" value="{{post.key().id()}}">
+					<input type="hidden" name="unlike" value="unlike">
+					<input type="submit" value="Unlike Post">
 				</form>
 			</div>
 		{% endfor %}
