@@ -131,7 +131,7 @@ class Login(Handler):
     u = user.User.login(username, password)
     if u:
       self.create_cookie(username)
-      self.redirect('/welcome')
+      self.redirect('/')
     else:
       self.render("login.html", error = "Invalid login")
 
@@ -141,6 +141,9 @@ class MainPage(Handler):
     logged_in_user = self.request.cookies.get('user_id')
     if logged_in_user:
       posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
+      for post in posts:
+        for comment in post.blog_comments:
+          print comment.comment
       self.render("home.html", posts = posts)
     else:
       self.redirect("/login")
@@ -148,7 +151,10 @@ class MainPage(Handler):
   def post(self):
     post_id = self.request.get('post_id')
     key = str(post_id)
-    self.redirect('/'+key, post_id)
+    if not self.request.get('comment'):
+      self.redirect('/'+key, post_id)
+    else:
+      self.redirect("/comment?post=" + post_id)
 
 #Create a new blog post
 class NewPost(Handler):
@@ -203,6 +209,19 @@ class EditPost(Handler):
     time.sleep(1)
     self.redirect('/')
 
+#Comment on a blog post
+class Comment(Handler):
+  def get(self):
+    self.render("comment.html")
+
+  def post(self):
+    post_id = self.request.get('post')
+    comment = self.request.get('comment')
+    created_by = self.request.cookies.get('user_id').split('|')[0]
+    post = blogPost.Post.get_by_id(int(post_id)) 
+    c = blogPost.Comment(post = post, comment = comment, created_by = created_by)
+    c.put()
+
 #Logout of blog
 class Logout(Handler):
   def get(self):
@@ -216,5 +235,6 @@ app = webapp2.WSGIApplication([
     ('/signup', Register),
     ('/login', Login),
     ('/logout', Logout),
-    ('/edit_post', EditPost)
+    ('/edit_post', EditPost),
+    ('/comment', Comment)
 ], debug=True)
