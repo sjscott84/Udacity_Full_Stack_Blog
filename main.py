@@ -202,17 +202,20 @@ class NewPost(Handler):
     self.render("new_entry.html")
 
   def post(self):
-    title = self.request.get('subject')
-    post = self.request.get('content')
-    created_by = self.request.cookies.get('user_id').split('|')[0]
-    #Only create a new Post if a title and content have been added
-    if title and post:
-      p = blogPost.Post(title = title, post = post, created_by = created_by, likes = 0)
-      p.put()
-      key = str(p.key().id())
-      self.redirect('/'+key, p.key().id())
+    if self.request.get('cancel'):
+      self.redirect('/')
     else:
-      self.render("new_entry.html", error="Enter a title and a post")
+      title = self.request.get('subject')
+      post = self.request.get('content')
+      created_by = self.request.cookies.get('user_id').split('|')[0]
+      #Only create a new Post if a title and content have been added
+      if title and post:
+        p = blogPost.Post(title = title, post = post, created_by = created_by, likes = 0)
+        p.put()
+        key = str(p.key().id())
+        self.redirect('/'+key, p.key().id())
+      else:
+        self.render("new_entry.html", error="Enter a title and a post")
 
 #Indivdual blog post page, this is where you can edit or delete a blog post
 class PostPage(Handler):
@@ -273,14 +276,17 @@ class EditPost(Handler):
 
   def post(self):
     post_id = self.request.get('post')
-    post = blogPost.Post.get_by_id(int(post_id))
-    updated_title = self.request.get('title')
-    updated_content = self.request.get('content')
-    post.title = updated_title
-    post.post = updated_content
-    post.put()
-    time.sleep(1)
-    self.redirect('/'+str(post_id), post_id)
+    if self.request.get('cancel'):
+      self.redirect('/'+str(post_id), post_id)
+    else:
+      post = blogPost.Post.get_by_id(int(post_id))
+      updated_title = self.request.get('title')
+      updated_content = self.request.get('content')
+      post.title = updated_title
+      post.post = updated_content
+      post.put()
+      time.sleep(1)
+      self.redirect('/'+str(post_id), post_id)
 
 #Comment on a blog post
 class Comment(Handler):
@@ -289,13 +295,16 @@ class Comment(Handler):
 
   def post(self):
     post_id = self.request.get('post')
-    comment = self.request.get('comment')
-    created_by = self.request.cookies.get('user_id').split('|')[0]
-    post = blogPost.Post.get_by_id(int(post_id)) 
-    c = blogPost.Comment(post = post, comment = comment, created_by = created_by)
-    c.put()
-    time.sleep(1)
-    self.redirect('/'+ str(post_id))
+    if self.request.get('cancel'):
+      self.redirect('/'+ str(post_id))
+    else:
+      comment = self.request.get('comment')
+      created_by = self.request.cookies.get('user_id').split('|')[0]
+      post = blogPost.Post.get_by_id(int(post_id)) 
+      c = blogPost.Comment(post = post, comment = comment, created_by = created_by)
+      c.put()
+      time.sleep(1)
+      self.redirect('/'+ str(post_id))
 
 #Edit a comment
 class EditComment(Handler):
@@ -304,12 +313,15 @@ class EditComment(Handler):
     self.render("edit_comment.html", comment = comment.comment, comment_id = self.request.get('comment'))
 
   def post(self):
-    new_comment = self.request.get('content')
     c = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
-    c.comment = new_comment
-    c.put()
-    time.sleep(1)
-    self.redirect('/'+ str(c.post.key().id()))
+    if self.request.get('cancel'):
+      self.redirect('/'+ str(c.post.key().id()))
+    else:
+      new_comment = self.request.get('content')
+      c.comment = new_comment
+      c.put()
+      time.sleep(1)
+      self.redirect('/'+ str(c.post.key().id()))
 
 #Logout of blog
 class Logout(Handler):
