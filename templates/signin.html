@@ -1,38 +1,38 @@
 <!DOCTYPE html>
 <head>
-	<link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-	<title>Sign UP</title>
+  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
+  <title>Sign UP</title>
 </head>
 <body>
-	<h2>Sign Up</h2>
-	<form method="POST">
-		<table>
-			<tbody>
-				<tr>
-					<td class="label">Username</td>
-					<td><input type="text" name="username" value="{{ username }}"></td>
-					<td class="error">{{error_username}}</td>
-				</tr>
-				<tr>
-					<td class="label">Password</td>
-					<td><input type="text" name="password"></td>
-					<td class="error">{{error_password}}</td>
-				</tr>
-				<tr>
-					<td class="label">Verify Password</td>
-					<td><input type="text" name="verify"></td>
-					<td class="error">{{error_verify}}</td>
-				</tr>
-				<tr>
-					<td class="label">Email</td>
-					<td><input type="text" name="email"></td>
-					<td class="error">{{error_email}}</td>
-				</tr>
-			</tbody>
-		</table>
-		<input type="submit" value="Sign Up">
-	</form>
-	<form method="POST">
-		<input class="logout" type="submit" name="login" value="Login">
-	</form>
+  <h2>Sign Up</h2>
+  <form method="POST">
+    <table>
+      <tbody>
+        <tr>
+          <td class="label">Username</td>
+          <td><input type="text" name="username" value="{{ username }}"></td>
+          <td class="error">{{error_username}}</td>
+        </tr>
+        <tr>
+          <td class="label">Password</td>
+          <td><input type="text" name="password"></td>
+          <td class="error">{{error_password}}</td>
+        </tr>
+        <tr>
+          <td class="label">Verify Password</td>
+          <td><input type="text" name="verify"></td>
+          <td class="error">{{error_verify}}</td>
+        </tr>
+        <tr>
+          <td class="label">Email</td>
+          <td><input type="text" name="email"></td>
+          <td class="error">{{error_email}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <input type="submit" value="Sign Up">
+  </form>
+  <form method="POST">
+    <input class="bottom-button" type="submit" name="login" value="Login">
+  </form>
 </body

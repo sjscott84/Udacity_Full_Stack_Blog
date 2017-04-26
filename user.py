@@ -1,6 +1,7 @@
 import hashlib
 import random
 from string import letters
+
 from google.appengine.ext import db
 
 #create salt for hash password
@@ -18,6 +19,7 @@ def make_pw_hash(name, pw, salt = None):
 def check_pw(name, pw, pw_hash):
   salt = pw_hash.split(',')[0]
   return pw_hash == make_pw_hash(name, pw, salt)
+
 
 #User object
 class User(db.Model):

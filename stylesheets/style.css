@@ -1,37 +1,28 @@
 body {
-    position: relative;
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    width: 800px;
-    margin: 0 auto;
-    padding: 10px;
-    color: #333;
+  position: relative;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  width: 800px;
+  margin: 0 auto;
+  padding: 10px;
+  color: #333;
 }
 
 .login-area {
-    font-size: 13px;
-    color: gray;
-    top: 10px;
-    right: 10px;
+  font-size: 13px;
+  color: gray;
+  top: 10px;
+  right: 10px;
 }
 
 h2 {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 
 .error {
-    color: red;
-}
-
-label {
-  display: block;
-  font-size: 20px;
-}
-
-label + label {
-    margin-top: 20px;
+  color: red;
 }
 
 input[type=text] {
@@ -55,43 +46,43 @@ input[type=submit] {
 }
 
 .post-heading {
-    padding-bottom: 10px;
-    position: relative;
-    border-bottom: 3px solid #666;
+  padding-bottom: 10px;
+  position: relative;
+  border-bottom: 3px solid #666;
 }
 
 .post-title {
-    font-size: 24px;
-    font-weight: bold;
-    text-decoration: none;
-    color: #333;
+  font-size: 24px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
 }
 
 .post-title:visisted {
-    color: #333;
+  color: #333;
 }
 
 .post-date {
-    right: 0px;
-    bottom: 0px;
-    font-size: 10px;
-    color: #999;
+  right: 0px;
+  bottom: 0px;
+  font-size: 10px;
+  color: #999;
 }
 
 .post-content {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 #outer {
-    width:100%;
-    text-align: left;
-    margin-top: 5px;
+  width:100%;
+  text-align: left;
+  margin-top: 5px;
 }
 .inner {
-    display: inline-block;
-    margin-right: 10px;
+  display: inline-block;
+  margin-right: 10px;
 }
 
-.logout {
-    margin-top: 30px;
+.bottom-button {
+  margin-top: 30px;
 }

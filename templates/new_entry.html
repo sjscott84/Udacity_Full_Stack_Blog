@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-	<head>
-		<link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-		<title>Blog</title>
-	</head>
-	<body>
-		<h2>New Post</h2>
-		<form method="post">
-			<input type="text" name="subject" placeholder="Title">
-			<br>
-			<textarea name="content"></textarea>
-			<br>
-			<input type="submit">
-		</form>
-		<p class="error">{{ error }}</p>
-		<form method="POST">
-			<input type="submit" class="logout" name="cancel" value="Cancel">
-		</form>
-	</body>
+  <head>
+    <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
+    <title>Blog</title>
+  </head>
+  <body>
+    <h2>New Post</h2>
+    <form method="post">
+      <input type="text" name="subject" placeholder="Title">
+      <br>
+      <textarea name="content"></textarea>
+      <br>
+      <input type="submit">
+    </form>
+    <p class="error">{{error}}</p>
+    <form method="POST">
+      <input type="submit" class="bottom-button" name="cancel" value="Cancel">
+    </form>
+  </body>

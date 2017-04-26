@@ -1,45 +1,45 @@
 <!DOCTYPE html>
 <head>
-	<link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-	<title>Blog</title>
+  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
+  <title>Blog</title>
 </head>
 <body>
-	<h1 class="post-heading">Blogs</h1>
-	<div id="outer">
-		<form class="inner" method="POST">
-			<input type="submit" class="logout" name="logout" value="Log Out">
-		</form>
-		<form class="inner" method="POST">
-			<input type="submit" class="logout" name="new_post" value="New Post">
-		</form>
-	</div>
-	<br>
-	<div>
-		{% for post in posts %}
-			<h2 class="post-title">{{post.title}}</h2>
-			<p class="post-content" name="post">{{post.post}}</p>
-			<p class="post-date" name="created">{{post.created.strftime('%Y-%m-%d')}}</p>
-			<p name="no_of_likes">Likes: {{post.likes}}</p>
-			{% if error_id == post.key().id() %}
-				<p class="error">{{like_error}}</p>
-			{% endif %}
-			<div id="outer">
-				<form class="inner" method="POST">
-					<input type="hidden" name="see_more" value="see_more">
-					<input type="hidden" name="post_id" value="{{post.key().id()}}">
-					<input type="submit" value="Actions">
-				</form>
-				<form  class="inner" method="POST">
-					<input type="hidden" name="post_id" value="{{post.key().id()}}">
-					<input type="hidden" name="like" value="like">
-					<input type="submit" value="Like Post">
-				</form>
-				<form  class="inner" method="POST">
-					<input type="hidden" name="post_id" value="{{post.key().id()}}">
-					<input type="hidden" name="unlike" value="unlike">
-					<input type="submit" value="Unlike Post">
-				</form>
-			</div>
-		{% endfor %}
-	</div>
+  <h1 class="post-heading">Blogs</h1>
+  <div id="outer">
+    <form class="inner" method="POST">
+      <input type="submit" class="bottom-button" name="logout" value="Log Out">
+    </form>
+    <form class="inner" method="POST">
+      <input type="submit" class="bottom-button" name="new_post" value="New Post">
+    </form>
+  </div>
+  <br>
+  <div>
+    {% for post in posts %}
+      <h2 class="post-title">{{post.title}}</h2>
+      <p class="post-content" name="post">{{post.post}}</p>
+      <p class="post-date" name="created">{{post.created.strftime('%Y-%m-%d')}}</p>
+      <p name="no_of_likes">Likes: {{post.likes}}</p>
+      {% if error_id == post.key().id() %}
+        <p class="error">{{like_error}}</p>
+      {% endif %}
+      <div id="outer">
+        <form class="inner" method="POST">
+          <input type="hidden" name="see_more" value="see_more">
+          <input type="hidden" name="post_id" value="{{post.key().id()}}">
+          <input type="submit" value="Actions">
+        </form>
+        <form  class="inner" method="POST">
+          <input type="hidden" name="post_id" value="{{post.key().id()}}">
+          <input type="hidden" name="like" value="like">
+          <input type="submit" value="Like Post">
+        </form>
+        <form  class="inner" method="POST">
+          <input type="hidden" name="post_id" value="{{post.key().id()}}">
+          <input type="hidden" name="unlike" value="unlike">
+          <input type="submit" value="Unlike Post">
+        </form>
+      </div>
+    {% endfor %}
+  </div>
 </body>

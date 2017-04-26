@@ -20,21 +20,22 @@ import hmac
 import time
 import operator
 
+from google.appengine.ext import db
+
 import user
 import blogPost
-
-from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), 
   autoescape = True)
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-PW_RE = re.compile(r"^.{3,20}$")
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-SECRET = "tGhlsdmn92jbe"
+USER_RE = re.compile(r'^[a-zA-Z0-9_-]{3,20}$')
+PW_RE = re.compile(r'^.{3,20}$')
+EMAIL_RE = re.compile(r'^[\S]+@[\S]+.[\S]+$')
+SECRET = 'tGhlsdmn92jbe'
 
 def make_secure_hash(var):
   return '%s|%s' % (var, hmac.new(SECRET, var).hexdigest())
+
 
 #Handler class to make rendering pages easier
 class Handler(webapp2.RequestHandler):
@@ -52,10 +53,11 @@ class Handler(webapp2.RequestHandler):
     user_hash = str(make_secure_hash(username))
     self.response.headers.add_header('Set-Cookie', 'user_id='+user_hash)
 
+
 #Create an account
-class SignUp(Handler):
+class Signup(Handler):
   def get(self):
-    self.render("signin.html")
+    self.render('signin.html')
 
   def post(self):
     if self.request.get('login'):
@@ -74,7 +76,7 @@ class SignUp(Handler):
         params['error_username'] = "That's not a valid username."
         errorFound = True;
       if not self.unique_username(self.username):
-        params['error_username'] = "That username already exists"
+        params['error_username'] = 'That username already exists'
         errorFound = True;
       if not self.valid_password(self.password):
         params['error_password'] = "That's not a valid password."
@@ -89,7 +91,7 @@ class SignUp(Handler):
       if not errorFound:
         self.done()
       else:
-        self.render("signin.html", **params)
+        self.render('signin.html', **params)
 
   def done():
     raise NotImplementedError
@@ -118,18 +120,19 @@ class SignUp(Handler):
     if not username_unique:
       return True
 
+
 #Register a new user
-class Register(SignUp):
+class Register(Signup):
   def done(self):
-    print "Done was called"
+    print 'Done was called'
     u = user.User.by_name(self.username)
     if u:
-      print 'U exists'
-      self.render("signin.html", error_username = "That user already exists")
+      self.render('signin.html', error_username = 'That user already exists')
     else:
       u = user.User.register(self.username, self.password, self.email)
       self.create_cookie(self.username)
       self.redirect('/')
+
 
 #Login to blog
 class Login(Handler):
@@ -139,7 +142,7 @@ class Login(Handler):
     if h:
       self.redirect('/')
     else:
-      self.render("login.html")
+      self.render('login.html')
 
   def post(self):
     if self.request.get('signup'):
@@ -153,18 +156,19 @@ class Login(Handler):
         self.create_cookie(username)
         self.redirect('/')
       else:
-        self.render("login.html", error = "Invalid login")
+        self.render('login.html', error = 'Invalid login')
+
 
 #Home page displaying last 10 blog posts
-class MainPage(Handler):
+class Home(Handler):
   def get(self):
     #Only render homepage if a user is logged in
     logged_in_user = self.request.cookies.get('user_id')
     if logged_in_user:
-      posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
-      self.render("home.html", posts = posts)
+      posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
+      self.render('home.html', posts = posts)
     else:
-      self.redirect("/login")
+      self.redirect('/login')
 
   def post(self):
     #Logout of blog
@@ -176,14 +180,15 @@ class MainPage(Handler):
     #See post page with comments and edit and delete options
     elif self.request.get('see_more'):
       key = str(self.request.get('post_id'))
-      self.redirect('/'+key, self.request.get('post_id'))
+      self.redirect('/' + key, self.request.get('post_id'))
     else:
       #If like or unlike buttons pressed
       post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
       #Only complete action is user didnot create the post
       if self.request.cookies.get('user_id').split('|')[0] == post.created_by:
-        posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
-        self.render("home.html", posts = posts, like_error = "You can not like your own post", 
+        posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
+        self.render('home.html', posts = posts, 
+          like_error = 'You can not like your own post', 
           error_id = int(self.request.get('post_id')))
       else:
         if self.request.get('like'):
@@ -196,10 +201,11 @@ class MainPage(Handler):
         time.sleep(.1)
         self.redirect('/')
 
+
 #Create a new blog post
-class NewPost(Handler):
+class New_post(Handler):
   def get(self):
-    self.render("new_entry.html")
+    self.render('new_entry.html')
 
   def post(self):
     if self.request.get('cancel'):
@@ -210,15 +216,17 @@ class NewPost(Handler):
       created_by = self.request.cookies.get('user_id').split('|')[0]
       #Only create a new Post if a title and content have been added
       if title and post:
-        p = blogPost.Post(title = title, post = post, created_by = created_by, likes = 0)
+        p = blogPost.Post(title = title, post = post, created_by = created_by, 
+          likes = 0)
         p.put()
         key = str(p.key().id())
-        self.redirect('/'+key, p.key().id())
+        self.redirect('/' + key, p.key().id())
       else:
-        self.render("new_entry.html", error="Enter a title and a post")
+        self.render("new_entry.html", error = 'Enter a title and a post')
+
 
 #Indivdual blog post page, this is where you can edit or delete a blog post
-class PostPage(Handler):
+class Post_page(Handler):
   def get(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
     sorted_comments = post.blog_comments.order('-created')
@@ -232,32 +240,33 @@ class PostPage(Handler):
     #Code to handle comments
     #Anyone can add a comment
     if self.request.get('add_comment'):
-      self.redirect('/comment?post='+str(post_id))
+      self.redirect('/comment?post=' + str(post_id))
     #Only comment creators can edit or delete comments
     if self.request.get('delete_comment') or self.request.get('edit_comment'):
       comment = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
       if not comment.created_by == user:
-        self.render("post_page.html", title = post.title, user = user, content = post.post, 
-          post_id = post_id, comments = post.blog_comments, comment_error="You can not edit or delete this comment",
+        self.render('post_page.html', title = post.title, user = user, 
+          content = post.post, post_id = post_id, comments = post.blog_comments, 
+          comment_error='You can not edit or delete this comment',
           error_id = comment.key().id())
       elif self.request.get('delete_comment'):
         comment.delete()
         time.sleep(1)
-        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, 
-          comments = post.blog_comments)
+        self.render("post_page.html", title = post.title, content = post.post, 
+          post_id = post_id, comments = post.blog_comments)
       elif self.request.get('edit_comment'):
-        self.redirect('/edit_comment?comment='+str(self.request.get('comment_id')))
+        self.redirect('/edit_comment?comment=' + str(self.request.get('comment_id')))
 
     #Code to handle blog post
     #Only post creators can edit or delete posts
     if self.request.get('edit_post') or self.request.get('delete_post'):
       if not post.created_by == user:
-        self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, 
-          comments = post.blog_comments, error="You can not edit or delete this post",
-          error_id = post_id)
+        self.render('post_page.html', title = post.title, content = post.post, 
+          post_id = post_id, comments = post.blog_comments, 
+          error="You can not edit or delete this post", error_id = post_id)
       else:
         if self.request.get('edit_post'):
-          self.redirect("/edit_post?post=" + str(post_id))
+          self.redirect('/edit_post?post=' + str(post_id))
         elif self.request.get('delete_post'):
           post.delete()
           time.sleep(1)
@@ -267,17 +276,19 @@ class PostPage(Handler):
     if self.request.get('home'):
       self.redirect('/')
 
+
 #Edit a blog post
-class EditPost(Handler):
+class Edit_post(Handler):
   def get(self):
     post_id = self.request.get('post')
     post = blogPost.Post.get_by_id(int(post_id))
-    self.render("edit_post.html", title = post.title, content = post.post, post_id = post_id)
+    self.render("edit_post.html", title = post.title, content = post.post, 
+      post_id = post_id)
 
   def post(self):
     post_id = self.request.get('post')
     if self.request.get('cancel'):
-      self.redirect('/'+str(post_id), post_id)
+      self.redirect('/' + str(post_id), post_id)
     else:
       post = blogPost.Post.get_by_id(int(post_id))
       updated_title = self.request.get('title')
@@ -286,42 +297,47 @@ class EditPost(Handler):
       post.post = updated_content
       post.put()
       time.sleep(1)
-      self.redirect('/'+str(post_id), post_id)
+      self.redirect('/' + str(post_id), post_id)
+
 
 #Comment on a blog post
 class Comment(Handler):
   def get(self):
-    self.render("comment.html")
+    self.render('comment.html')
 
   def post(self):
     post_id = self.request.get('post')
     if self.request.get('cancel'):
-      self.redirect('/'+ str(post_id))
+      self.redirect('/' + str(post_id))
     else:
       comment = self.request.get('comment')
       created_by = self.request.cookies.get('user_id').split('|')[0]
       post = blogPost.Post.get_by_id(int(post_id)) 
-      c = blogPost.Comment(post = post, comment = comment, created_by = created_by)
+      c = blogPost.Comment(post = post, comment = comment, 
+        created_by = created_by)
       c.put()
       time.sleep(1)
-      self.redirect('/'+ str(post_id))
+      self.redirect('/' + str(post_id))
+
 
 #Edit a comment
-class EditComment(Handler):
+class Edit_comment(Handler):
   def get(self):
     comment = blogPost.Comment.get_by_id(int(self.request.get('comment')))
-    self.render("edit_comment.html", comment = comment.comment, comment_id = self.request.get('comment'))
+    self.render('edit_comment.html', comment = comment.comment, 
+      comment_id = self.request.get('comment'))
 
   def post(self):
     c = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
     if self.request.get('cancel'):
-      self.redirect('/'+ str(c.post.key().id()))
+      self.redirect('/' + str(c.post.key().id()))
     else:
       new_comment = self.request.get('content')
       c.comment = new_comment
       c.put()
       time.sleep(1)
-      self.redirect('/'+ str(c.post.key().id()))
+      self.redirect('/' + str(c.post.key().id()))
+
 
 #Logout of blog
 class Logout(Handler):
@@ -330,13 +346,13 @@ class Logout(Handler):
     self.redirect('/signup')
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/newpost', NewPost),
-    ('/([0-9]+)', PostPage),
+    ('/', Home),
+    ('/newpost', New_post),
+    ('/([0-9]+)', Post_page),
     ('/signup', Register),
     ('/login', Login),
     ('/logout', Logout),
-    ('/edit_post', EditPost),
+    ('/edit_post', Edit_post),
     ('/comment', Comment),
-    ('/edit_comment', EditComment)
+    ('/edit_comment', Edit_comment)
 ], debug=True)

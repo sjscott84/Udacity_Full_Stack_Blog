@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <head>
-	<link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-	<title>Blog</title>
+  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
+  <title>Blog</title>
 </head>
 <body>
-	<form method="POST">
-		<input type="text" value="{{title}}" name="title"></h4>
-		<br>
-		<textarea name="content">{{content}}</textarea>
-		<br>
-		<input type="hidden" name="post_id" value="{{post_id}}">
-		<input type="submit">
-	</form>
-	<form method="POST">
-		<input type="hidden" name="post_id" value="{{post_id}}">
-		<input type="submit" class="logout" name="cancel" value="Cancel">
-	</form>
+  <form method="POST">
+    <input type="text" value="{{title}}" name="title"></h4>
+    <br>
+    <textarea name="content">{{content}}</textarea>
+    <br>
+    <input type="hidden" name="post_id" value="{{post_id}}">
+    <input type="submit">
+  </form>
+  <form method="POST">
+    <input type="hidden" name="post_id" value="{{post_id}}">
+    <input type="submit" class="bottom-button" name="cancel" value="Cancel">
+  </form>
 </body>
