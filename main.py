@@ -25,7 +25,8 @@ import blogPost
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
+jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), 
+  autoescape = True)
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PW_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
@@ -56,31 +57,35 @@ class SignUp(Handler):
     self.render("signin.html")
 
   def post(self):
-    self.username = self.request.get('username')
-    self.password = self.request.get('password')
-    self.verify = self.request.get('verify')
-    self.email = self.request.get('email')
-    errorFound = False
-
-    params = dict(username = self.username)
-
-    if not self.valid_username(self.username):
-      params['error_username'] = "That's not a valid username."
-      errorFound = True;
-    if not self.valid_password(self.password):
-      params['error_password'] = "That's not a valid password."
-      errorFound = True
-    if not self.password_match(self.password, self.verify):
-      params['error_verify'] = "Your passwords didn't match."
-      errorFound = True
-    if not self.valid_email(self.email):
-      params['error_email'] = "That's not a valid email."
-      errorFound = True
-
-    if not errorFound:
-      self.done()
+    if self.request.get('login'):
+      self.redirect('/login')
     else:
-      self.render("signin.html", **params)
+      self.username = self.request.get('username')
+      self.password = self.request.get('password')
+      self.verify = self.request.get('verify')
+      self.email = self.request.get('email')
+      errorFound = False
+
+      params = dict(username = self.username)
+
+      #Check to ensure valid details entered
+      if not self.valid_username(self.username):
+        params['error_username'] = "That's not a valid username."
+        errorFound = True;
+      if not self.valid_password(self.password):
+        params['error_password'] = "That's not a valid password."
+        errorFound = True
+      if not self.password_match(self.password, self.verify):
+        params['error_verify'] = "Your passwords didn't match."
+        errorFound = True
+      if not self.valid_email(self.email):
+        params['error_email'] = "That's not a valid email."
+        errorFound = True
+
+      if not errorFound:
+        self.done()
+      else:
+        self.render("signin.html", **params)
 
   def done():
     raise NotImplementedError
@@ -104,6 +109,7 @@ class SignUp(Handler):
   def hash_str(self, s):
     return hashlib.sha256(s).hexdigest()
 
+#Register a new user
 class Register(SignUp):
   def done(self):
     print "Done was called"
@@ -119,6 +125,7 @@ class Register(SignUp):
 #Login to blog
 class Login(Handler):
   def get(self):
+    #If a cookie exists go straight to homepage, otherwise render login page
     h = self.request.cookies.get('user_id')
     if h:
       self.redirect('/')
@@ -126,6 +133,7 @@ class Login(Handler):
       self.render("login.html")
 
   def post(self):
+    #Check valid username and password entered
     username = self.request.get('username')
     password = self.request.get('password')
     u = user.User.login(username, password)
@@ -138,6 +146,7 @@ class Login(Handler):
 #Home page displaying last 10 blog posts
 class MainPage(Handler):
   def get(self):
+    #Only render homepage if a user is logged in
     logged_in_user = self.request.cookies.get('user_id')
     if logged_in_user:
       posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
@@ -146,12 +155,16 @@ class MainPage(Handler):
       self.redirect("/login")
 
   def post(self):
-    #if not self.request.get('like') or self.request.get('unlike'):
-    if self.request.get('see_more'):
+    #If See More button pressed:
+    if self.request.get('logout'):
+      self.redirect('/logout')
+    elif self.request.get('see_more'):
       key = str(self.request.get('post_id'))
       self.redirect('/'+key, self.request.get('post_id'))
     else:
+      #If like or unlike buttons pressed
       post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
+      #Only complete action is user didnot create the post
       if self.request.cookies.get('user_id').split('|')[0] == post.created_by:
         posts = db.GqlQuery("SELECT * FROM Post ORDER BY created DESC LIMIT 10")
         self.render("home.html", posts = posts, like_error = "You can not like your own post", 
@@ -176,6 +189,7 @@ class NewPost(Handler):
     title = self.request.get('subject')
     post = self.request.get('content')
     created_by = self.request.cookies.get('user_id').split('|')[0]
+    #Only create a new Post if a title and content have been added
     if title and post:
       p = blogPost.Post(title = title, post = post, created_by = created_by, likes = 0)
       p.put()
@@ -188,7 +202,8 @@ class NewPost(Handler):
 class PostPage(Handler):
   def get(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
-    self.render("post_page.html", title = post.title, content = post.post, post_id = post_id, comments = post.blog_comments)
+    self.render("post_page.html", title = post.title, content = post.post, 
+      post_id = post_id, comments = post.blog_comments)
 
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
@@ -279,7 +294,7 @@ class EditComment(Handler):
 class Logout(Handler):
   def get(self):
     self.response.headers.add_header('Set-Cookie', 'user_id=;Path="/"')
-    self.redirect('/login')
+    self.redirect('/signup')
 
 app = webapp2.WSGIApplication([
     ('/', MainPage),

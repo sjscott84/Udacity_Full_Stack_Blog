@@ -15,19 +15,6 @@ body {
     right: 10px;
 }
 
-.login-link {
-    color: gray;
-    text-decoration: none;
-}
-
-.login-link:visited {
-    color: gray;
-}
-
-.login-link:hover {
-    text-decoration: underline;
-}
-
 h2 {
     font-size: 24px;
     font-weight: bold;
@@ -67,20 +54,6 @@ input[type=submit] {
   font-size: 12px;
 }
 
-.main-title {
-    display: block;
-    color: #222;
-    font-size: 40px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 30px;
-    text-decoration: none;
-}
-
-.post + .post {
-    margin-top: 15px;
-}
-
 .post-heading {
     padding-bottom: 10px;
     position: relative;
@@ -109,14 +82,6 @@ input[type=submit] {
     margin-top: 5px;
 }
 
-.age {
-    position: absolute;
-    bottom: 0px;
-    right: 0px;
-    color: gray;
-    font-size: 12px;
-}
-
 #outer {
     width:100%;
     text-align: left;
@@ -125,4 +90,8 @@ input[type=submit] {
 .inner {
     display: inline-block;
     margin-right: 10px;
+}
+
+.logout {
+    margin-top: 30px;
 }

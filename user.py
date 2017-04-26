@@ -21,17 +21,23 @@ def check_pw(name, pw, pw_hash):
 
 #User object
 class User(db.Model):
+  """
+  Creates a User object with variables name, pw_hash (a hashed
+  password and email)
+  """
   name = db.StringProperty(required = True)
   pw_hash = db.StringProperty(required = True)
   email = db.StringProperty()
 
   @classmethod
   def by_name(cls, name):
+    #Get a User by name
     u = User.all().filter('name =', name).get()
     return u
 
   @classmethod
   def register(cls, name, password, email):
+    #Hash the entered password and then create User object
     hash_password = make_pw_hash(name, password)
     u = User(name = name, pw_hash = hash_password, email = email)
     u.put()
