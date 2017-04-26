@@ -10,7 +10,7 @@
 		{% for post in posts %}
 			<h2 class="post-title" name="title">{{post.title}}</h2>
 			<p class="post-content" name="post">{{post.post}}</p>
-			<p class="post-date" name="created">{{post.created}}</p>
+			<p class="post-date" name="created">{{post.created.strftime('%Y-%m-%d')}}</p>
 			<p name="no_of_likes">Likes: {{post.likes}}</p>
 			{% if error_id == post.key().id() %}
 				<p class="error">{{like_error}}</p>

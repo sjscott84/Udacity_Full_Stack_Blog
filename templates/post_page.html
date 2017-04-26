@@ -23,6 +23,7 @@
 	</form>
 	{% for comment in comments %}
 		<p>{{comment.comment}}</p>
+		<p class="post-date">{{comment.created.strftime('%Y-%m-%d')}}</p>
 		{% if error_id == comment.key().id() %}
 			<p class="error">{{comment_error}}</p>
 		{% endif %}

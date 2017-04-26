@@ -18,6 +18,7 @@ import re
 import hashlib
 import hmac
 import time
+import operator
 
 import user
 import blogPost
@@ -202,8 +203,9 @@ class NewPost(Handler):
 class PostPage(Handler):
   def get(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
+    sorted_comments = post.blog_comments.order('-created')
     self.render("post_page.html", title = post.title, content = post.post, 
-      post_id = post_id, comments = post.blog_comments)
+      post_id = post_id, comments = sorted_comments)
 
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
