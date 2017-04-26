@@ -73,6 +73,9 @@ class SignUp(Handler):
       if not self.valid_username(self.username):
         params['error_username'] = "That's not a valid username."
         errorFound = True;
+      if not self.unique_username(self.username):
+        params['error_username'] = "That username already exists"
+        errorFound = True;
       if not self.valid_password(self.password):
         params['error_password'] = "That's not a valid password."
         errorFound = True
@@ -109,6 +112,11 @@ class SignUp(Handler):
 
   def hash_str(self, s):
     return hashlib.sha256(s).hexdigest()
+
+  def unique_username(self, username):
+    username_unique = user.User.by_name(username)
+    if not username_unique:
+      return True
 
 #Register a new user
 class Register(SignUp):
