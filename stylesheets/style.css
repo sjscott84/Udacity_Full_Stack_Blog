@@ -85,7 +85,7 @@ input[type=submit] {
 #outer {
     width:100%;
     text-align: left;
-    margin-top: 20px;
+    margin-top: 5px;
 }
 .inner {
     display: inline-block;

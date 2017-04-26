@@ -156,9 +156,13 @@ class MainPage(Handler):
       self.redirect("/login")
 
   def post(self):
-    #If See More button pressed:
+    #Logout of blog
     if self.request.get('logout'):
       self.redirect('/logout')
+    #Create a new post
+    elif self.request.get('new_post'):
+      self.redirect('/newpost')
+    #See post page with comments and edit and delete options
     elif self.request.get('see_more'):
       key = str(self.request.get('post_id'))
       self.redirect('/'+key, self.request.get('post_id'))
@@ -244,6 +248,10 @@ class PostPage(Handler):
           post.delete()
           time.sleep(1)
           self.redirect('/')
+
+    #Back to home page
+    if self.request.get('home'):
+      self.redirect('/')
 
 #Edit a blog post
 class EditPost(Handler):

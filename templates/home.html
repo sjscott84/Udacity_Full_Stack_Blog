@@ -5,10 +5,18 @@
 </head>
 <body>
 	<h1 class="post-heading">Blogs</h1>
+	<div id="outer">
+		<form class="inner" method="POST">
+			<input type="submit" class="logout" name="logout" value="Log Out">
+		</form>
+		<form class="inner" method="POST">
+			<input type="submit" class="logout" name="new_post" value="New Post">
+		</form>
+	</div>
 	<br>
 	<div>
 		{% for post in posts %}
-			<h2 class="post-title" name="title">{{post.title}}</h2>
+			<h2 class="post-title">{{post.title}}</h2>
 			<p class="post-content" name="post">{{post.post}}</p>
 			<p class="post-date" name="created">{{post.created.strftime('%Y-%m-%d')}}</p>
 			<p name="no_of_likes">Likes: {{post.likes}}</p>
@@ -19,7 +27,7 @@
 				<form class="inner" method="POST">
 					<input type="hidden" name="see_more" value="see_more">
 					<input type="hidden" name="post_id" value="{{post.key().id()}}">
-					<input type="submit" value="See More">
+					<input type="submit" value="Actions">
 				</form>
 				<form  class="inner" method="POST">
 					<input type="hidden" name="post_id" value="{{post.key().id()}}">
@@ -34,7 +42,4 @@
 			</div>
 		{% endfor %}
 	</div>
-	<form method="POST">
-		<input type="submit" class="logout" name="logout" value="Log Out">
-	</form>
 </body>
