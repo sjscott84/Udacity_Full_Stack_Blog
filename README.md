@@ -3,7 +3,7 @@ Project for Udacity Full Stack Web Developer Nanodegree
 
 ## Installation
 
-No installation needed to view project, simply go to https://blog-165122.appspot.com/
+No installation needed to view project, simply go to https://udacity-fsnd-blog.appspot.com/
 
 ## Running the Project Locally
 
