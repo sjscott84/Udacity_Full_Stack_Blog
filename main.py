@@ -134,15 +134,18 @@ class Login(Handler):
       self.render("login.html")
 
   def post(self):
-    #Check valid username and password entered
-    username = self.request.get('username')
-    password = self.request.get('password')
-    u = user.User.login(username, password)
-    if u:
-      self.create_cookie(username)
-      self.redirect('/')
+    if self.request.get('signup'):
+      self.redirect('/signup')
     else:
-      self.render("login.html", error = "Invalid login")
+      #Check valid username and password entered
+      username = self.request.get('username')
+      password = self.request.get('password')
+      u = user.User.login(username, password)
+      if u:
+        self.create_cookie(username)
+        self.redirect('/')
+      else:
+        self.render("login.html", error = "Invalid login")
 
 #Home page displaying last 10 blog posts
 class MainPage(Handler):
