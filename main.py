@@ -129,6 +129,8 @@ class Register(Signup):
     if u:
       self.render('signin.html', error_username = 'That user already exists')
     else:
+      #hash_user = self.make_secure_hash(self.username).split('|')[1]
+      #u = user.User.register(hash_user, self.password, self.email)
       u = user.User.register(self.username, self.password, self.email)
       self.create_cookie(self.username)
       self.redirect('/')
@@ -184,22 +186,23 @@ class Home(Handler):
     else:
       #If like or unlike buttons pressed
       post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
-      #Only complete action is user didnot create the post
-      if self.request.cookies.get('user_id').split('|')[0] == post.created_by:
-        posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
-        self.render('home.html', posts = posts, 
-          like_error = 'You can not like your own post', 
-          error_id = int(self.request.get('post_id')))
-      else:
-        if self.request.get('like'):
-          updated_likes = post.likes + 1
-        elif self.request.get('unlike'):
-          updated_likes = post.likes - 1
+      if post is not None:
+        #Only complete action is user didnot create the post
+        if self.request.cookies.get('user_id').split('|')[0] == post.created_by:
+          posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
+          self.render('home.html', posts = posts, 
+            like_error = 'You can not like your own post', 
+            error_id = int(self.request.get('post_id')))
+        else:
+          if self.request.get('like'):
+            updated_likes = post.likes + 1
+          elif self.request.get('unlike'):
+            updated_likes = post.likes - 1
 
-        post.likes = updated_likes
-        post.put()
-        time.sleep(.1)
-        self.redirect('/')
+          post.likes = updated_likes
+          post.put()
+          time.sleep(.1)
+          self.redirect('/')
 
 
 #Create a new blog post
@@ -215,7 +218,7 @@ class New_post(Handler):
       post = self.request.get('content')
       created_by = self.request.cookies.get('user_id').split('|')[0]
       #Only create a new Post if a title and content have been added
-      if title and post:
+      if title and post and self.request.cookies.get('user_id'):
         p = blogPost.Post(title = title, post = post, created_by = created_by, 
           likes = 0)
         p.put()
@@ -244,18 +247,19 @@ class Post_page(Handler):
     #Only comment creators can edit or delete comments
     if self.request.get('delete_comment') or self.request.get('edit_comment'):
       comment = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
-      if not comment.created_by == user:
-        self.render('post_page.html', title = post.title, user = user, 
-          content = post.post, post_id = post_id, comments = post.blog_comments, 
-          comment_error='You can not edit or delete this comment',
-          error_id = comment.key().id())
-      elif self.request.get('delete_comment'):
-        comment.delete()
-        time.sleep(1)
-        self.render("post_page.html", title = post.title, content = post.post, 
-          post_id = post_id, comments = post.blog_comments)
-      elif self.request.get('edit_comment'):
-        self.redirect('/edit_comment?comment=' + str(self.request.get('comment_id')))
+      if comment is not None:
+        if not comment.created_by == user:
+          self.render('post_page.html', title = post.title, user = user, 
+            content = post.post, post_id = post_id, comments = post.blog_comments, 
+            comment_error='You can not edit or delete this comment',
+            error_id = comment.key().id())
+        elif self.request.get('delete_comment'):
+          comment.delete()
+          time.sleep(1)
+          self.render("post_page.html", title = post.title, content = post.post, 
+            post_id = post_id, comments = post.blog_comments)
+        elif self.request.get('edit_comment'):
+          self.redirect('/edit_comment?comment=' + str(self.request.get('comment_id')))
 
     #Code to handle blog post
     #Only post creators can edit or delete posts
@@ -291,13 +295,17 @@ class Edit_post(Handler):
       self.redirect('/' + str(post_id), post_id)
     else:
       post = blogPost.Post.get_by_id(int(post_id))
-      updated_title = self.request.get('title')
-      updated_content = self.request.get('content')
-      post.title = updated_title
-      post.post = updated_content
-      post.put()
-      time.sleep(1)
-      self.redirect('/' + str(post_id), post_id)
+      if post.created_by == self.request.cookies.get('user_id').split('|')[0]:
+        updated_title = self.request.get('title')
+        updated_content = self.request.get('content')
+        post.title = updated_title
+        post.post = updated_content
+        post.put()
+        time.sleep(1)
+        self.redirect('/' + str(post_id), post_id)
+      else:
+        self.render("edit_post.html", title = post.title, content = post.post, 
+          post_id = post_id, error = "Only post author can edit this post")
 
 
 #Comment on a blog post
@@ -332,11 +340,15 @@ class Edit_comment(Handler):
     if self.request.get('cancel'):
       self.redirect('/' + str(c.post.key().id()))
     else:
-      new_comment = self.request.get('content')
-      c.comment = new_comment
-      c.put()
-      time.sleep(1)
-      self.redirect('/' + str(c.post.key().id()))
+      if c.created_by == self.request.cookies.get('user_id').split('|')[0]:
+        new_comment = self.request.get('content')
+        c.comment = new_comment
+        c.put()
+        time.sleep(1)
+        self.redirect('/' + str(c.post.key().id()))
+      else:
+        self.render('edit_comment.html', comment = c.comment, 
+          comment_id = c.post.key().id(), error = "Only comment author can edit comment")
 
 
 #Logout of blog
