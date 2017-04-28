@@ -28,9 +28,7 @@ import blogPost
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), 
   autoescape = True)
-USER_RE = re.compile(r'^[a-zA-Z0-9_-]{3,20}$')
-PW_RE = re.compile(r'^.{3,20}$')
-EMAIL_RE = re.compile(r'^[\S]+@[\S]+.[\S]+$')
+
 SECRET = 'tGhlsdmn92jbe'
 
 def make_secure_hash(var):
@@ -53,6 +51,11 @@ class Handler(webapp2.RequestHandler):
     user_hash = str(make_secure_hash(username))
     self.response.headers.add_header('Set-Cookie', 'user_id='+user_hash)
 
+  def check_user(self, what_object):
+    if hmac.new(SECRET, self.request.cookies.get('user_id').split('|')[0]).hexdigest() == \
+    self.request.cookies.get('user_id').split('|')[1] and \
+    self.request.cookies.get('user_id').split('|')[0] == what_object.created_by:
+      return True
 
 #Create an account
 class Signup(Handler):
@@ -97,12 +100,15 @@ class Signup(Handler):
     raise NotImplementedError
 
   def valid_username(self, username):
+    USER_RE = re.compile(r'^[a-zA-Z0-9_-]{3,20}$')
     return USER_RE.match(username)
 
   def valid_password(self, password):
+    PW_RE = re.compile(r'^.{3,20}$')
     return PW_RE.match(password)
 
   def valid_email(self, email):
+    EMAIL_RE = re.compile(r'^[\S]+@[\S]+.[\S]+$')
     if not email:
       return True
     else:
@@ -124,14 +130,11 @@ class Signup(Handler):
 #Register a new user
 class Register(Signup):
   def done(self):
-    print 'Done was called'
     u = user.User.by_name(self.username)
     if u:
       self.render('signin.html', error_username = 'That user already exists')
     else:
-      #hash_user = self.make_secure_hash(self.username).split('|')[1]
-      #u = user.User.register(hash_user, self.password, self.email)
-      u = user.User.register(self.username, self.password, self.email)
+      u = user.User.register(self.username, self.password, self.email, SECRET)
       self.create_cookie(self.username)
       self.redirect('/')
 
@@ -187,23 +190,41 @@ class Home(Handler):
       #If like or unlike buttons pressed
       post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
       if post is not None:
-        #Only complete action is user didnot create the post
-        if self.request.cookies.get('user_id').split('|')[0] == post.created_by:
-          posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
-          self.render('home.html', posts = posts, 
-            like_error = 'You can not like your own post', 
-            error_id = int(self.request.get('post_id')))
-        else:
-          if self.request.get('like'):
-            updated_likes = post.likes + 1
-          elif self.request.get('unlike'):
-            updated_likes = post.likes - 1
+        current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[1])
+        posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
+        if current_user is not None:
+          #Only complete action if user didnot create the post
+          if self.check_user(post):
+            self.render('home.html', posts = posts, 
+              like_error = 'You can not like your own post', 
+              error_id = int(self.request.get('post_id')))
+          else:
+            if self.request.get('like'):
+              if self.request.get('post_id') in current_user.liked_posts:
+                self.render('home.html', posts = posts, 
+                  like_error = 'You have already liked this post', 
+                  error_id = int(self.request.get('post_id')))
+              else:
+                updated_likes = post.likes + 1
+                post.likes = updated_likes
+                current_user.liked_posts.append(self.request.get('post_id'))
+                self.update_db(current_user, post, posts)
+            elif self.request.get('unlike'):
+              if self.request.get('post_id') in current_user.unliked_posts:
+                self.render('home.html', posts = posts, 
+                  like_error = 'You have already unliked this post', 
+                  error_id = int(self.request.get('post_id')))
+              else:
+                updated_likes = post.likes - 1
+                post.likes = updated_likes
+                current_user.unliked_posts.append(self.request.get('post_id'))
+                self.update_db(current_user, post, posts)
 
-          post.likes = updated_likes
-          post.put()
-          time.sleep(.1)
-          self.redirect('/')
-
+  def update_db(self, user, post, posts):
+    user.put()
+    post.put()
+    time.sleep(.1)
+    self.render('home.html', posts = posts)
 
 #Create a new blog post
 class New_post(Handler):
@@ -238,7 +259,6 @@ class Post_page(Handler):
 
   def post(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
-    user = self.request.cookies.get('user_id').split('|')[0]
 
     #Code to handle comments
     #Anyone can add a comment
@@ -248,8 +268,8 @@ class Post_page(Handler):
     if self.request.get('delete_comment') or self.request.get('edit_comment'):
       comment = blogPost.Comment.get_by_id(int(self.request.get('comment_id')))
       if comment is not None:
-        if not comment.created_by == user:
-          self.render('post_page.html', title = post.title, user = user, 
+        if not self.check_user(comment):
+          self.render('post_page.html', title = post.title, 
             content = post.post, post_id = post_id, comments = post.blog_comments, 
             comment_error='You can not edit or delete this comment',
             error_id = comment.key().id())
@@ -264,7 +284,7 @@ class Post_page(Handler):
     #Code to handle blog post
     #Only post creators can edit or delete posts
     if self.request.get('edit_post') or self.request.get('delete_post'):
-      if not post.created_by == user:
+      if not self.check_user(post):
         self.render('post_page.html', title = post.title, content = post.post, 
           post_id = post_id, comments = post.blog_comments, 
           error="You can not edit or delete this post", error_id = post_id)
