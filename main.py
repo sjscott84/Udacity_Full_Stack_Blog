@@ -52,9 +52,10 @@ class Handler(webapp2.RequestHandler):
     self.response.headers.add_header('Set-Cookie', 'user_id='+user_hash)
 
   def check_user(self, what_object):
+    print what_object.created_by.name
     if hmac.new(SECRET, self.request.cookies.get('user_id').split('|')[0]).hexdigest() == \
     self.request.cookies.get('user_id').split('|')[1] and \
-    self.request.cookies.get('user_id').split('|')[0] == what_object.created_by:
+    self.request.cookies.get('user_id').split('|')[0] == what_object.created_by.name:
       return True
 
 #Create an account
@@ -190,7 +191,7 @@ class Home(Handler):
       #If like or unlike buttons pressed
       post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
       if post is not None:
-        current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[1])
+        current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[0])
         posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
         if current_user is not None:
           #Only complete action if user didnot create the post
@@ -237,11 +238,10 @@ class New_post(Handler):
     else:
       title = self.request.get('subject')
       post = self.request.get('content')
-      created_by = self.request.cookies.get('user_id').split('|')[0]
+      created_by = user.User.by_name(self.request.cookies.get('user_id').split('|')[0])
       #Only create a new Post if a title and content have been added
       if title and post and self.request.cookies.get('user_id'):
-        p = blogPost.Post(title = title, post = post, created_by = created_by, 
-          likes = 0)
+        p = blogPost.Post(title = title, post = post, created_by = created_by, likes = 0)
         p.put()
         key = str(p.key().id())
         self.redirect('/' + key, p.key().id())
@@ -315,7 +315,7 @@ class Edit_post(Handler):
       self.redirect('/' + str(post_id), post_id)
     else:
       post = blogPost.Post.get_by_id(int(post_id))
-      if post.created_by == self.request.cookies.get('user_id').split('|')[0]:
+      if post.created_by.name == self.request.cookies.get('user_id').split('|')[0]:
         updated_title = self.request.get('title')
         updated_content = self.request.get('content')
         post.title = updated_title
@@ -339,7 +339,7 @@ class Comment(Handler):
       self.redirect('/' + str(post_id))
     else:
       comment = self.request.get('comment')
-      created_by = self.request.cookies.get('user_id').split('|')[0]
+      created_by = user.User.by_name(self.request.cookies.get('user_id').split('|')[0])
       post = blogPost.Post.get_by_id(int(post_id)) 
       c = blogPost.Comment(post = post, comment = comment, 
         created_by = created_by)
@@ -360,7 +360,7 @@ class Edit_comment(Handler):
     if self.request.get('cancel'):
       self.redirect('/' + str(c.post.key().id()))
     else:
-      if c.created_by == self.request.cookies.get('user_id').split('|')[0]:
+      if c.created_by.name == self.request.cookies.get('user_id').split('|')[0]:
         new_comment = self.request.get('content')
         c.comment = new_comment
         c.put()
