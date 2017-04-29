@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-  <head>
-    <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-    <title>Blog</title>
-  </head>
-  <body>
+{% extends "base.html" %}
+{% block content %}
     <h2>New Post</h2>
     <form method="post">
       <input type="text" name="subject" placeholder="Title">
@@ -17,3 +13,4 @@
       <input type="submit" class="bottom-button" name="cancel" value="Cancel">
     </form>
   </body>
+{% endblock %}

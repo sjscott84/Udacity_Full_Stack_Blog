@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<head>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-  <title>Sign UP</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
   <h2>Sign Up</h2>
   <form method="POST">
     <table>
@@ -35,4 +31,4 @@
   <form method="POST">
     <input class="bottom-button" type="submit" name="login" value="Login">
   </form>
-</body
+{% endblock %}

@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<head>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-  <title>Blog</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
   <h2>Login</h2>
   <form class="login-area" method="POST">
     <input type="text" name="username" placeholder="Username">
@@ -15,4 +11,4 @@
   <form method="POST">
     <input type="submit" name="signup" value="Create Account">
   </form> 
-</body>
+{% endblock %}

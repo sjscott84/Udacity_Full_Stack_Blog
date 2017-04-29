@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<head>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-  <title>Blog</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
   <h2>{{title}}</h2>
   <p>{{content}}</p>
   <p class="error">{{error}}</p>
@@ -43,4 +39,4 @@
   <form method="POST">
     <input class="bottom-button" type="submit" name="home" value="Home Page">
   </form>
-</body>
+{% endblock %}

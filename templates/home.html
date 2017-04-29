@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<head>
-  <link type="text/css" rel="stylesheet" href="/stylesheets/style.css"/>
-  <title>Blog</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
   <h1 class="post-heading">Blogs</h1>
   <div id="outer">
     <form class="inner" method="POST">
@@ -44,4 +40,4 @@
       </div>
     {% endfor %}
   </div>
-</body>
+{% endblock %}
