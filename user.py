@@ -52,8 +52,9 @@ class User(db.Model):
     u.put()
 
   @classmethod
-  def login(cls, name, password):
+  def login(cls, name, password, secret):
     #see if username exisits
-    u = cls.by_name(name)
+    hash_username = make_un_hash(secret, name)
+    u = cls.by_name(hash_username)
     if u and check_pw(name, password, u.pw_hash):
       return u

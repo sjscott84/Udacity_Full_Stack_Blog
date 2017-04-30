@@ -34,7 +34,6 @@ SECRET = 'tGhlsdmn92jbe'
 def make_secure_hash(var):
   return '%s|%s' % (var, hmac.new(SECRET, var).hexdigest())
 
-
 #Handler class to make rendering pages easier
 class Handler(webapp2.RequestHandler):
   def write(self, *a, **kw):
@@ -57,6 +56,9 @@ class Handler(webapp2.RequestHandler):
     self.request.cookies.get('user_id').split('|')[1] and \
     self.request.cookies.get('user_id').split('|')[0] == what_object.created_by.name:
       return True
+
+  def wait_for_eventual_consistancy(self):
+    time.sleep(.1)
 
 #Create an account
 class Signup(Handler):
@@ -157,7 +159,7 @@ class Login(Handler):
       #Check valid username and password entered
       username = self.request.get('username')
       password = self.request.get('password')
-      u = user.User.login(username, password)
+      u = user.User.login(username, password, SECRET)
       if u:
         self.create_cookie(username)
         self.redirect('/')
@@ -177,12 +179,14 @@ class Home(Handler):
       self.redirect('/login')
 
 #Like a post - post author cannot like own post and user can only like once
-class Like_post(Handler):
+class LikePost(Handler):
   def post(self):
+    #from pdb import set_trace
+    #set_trace()
     post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
     posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
     if post is not None:
-      current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[0])
+      current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[1])
       if current_user is not None:
         if self.check_user(post):
           self.render('home.html', posts = posts, 
@@ -199,16 +203,18 @@ class Like_post(Handler):
             current_user.liked_posts.append(self.request.get('post_id'))
             current_user.put()
             post.put()
-            time.sleep(.1)
+            self.wait_for_eventual_consistancy()
             self.render('home.html', posts = posts)
+    else:
+      print "No Post"
 
 #Unlike a post - post author cannot unlike own post and user can only unlike once
-class Unlike_post(Handler):
+class UnlikePost(Handler):
   def post(self):
     post = blogPost.Post.get_by_id(int(self.request.get('post_id')))
     posts = db.GqlQuery('SELECT * FROM Post ORDER BY created DESC LIMIT 10')
     if post is not None:
-      current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[0])
+      current_user = user.User.by_name(self.request.cookies.get('user_id').split('|')[1])
       if current_user is not None:
         if self.check_user(post):
           self.render('home.html', posts = posts, 
@@ -225,11 +231,11 @@ class Unlike_post(Handler):
             current_user.liked_posts.append(self.request.get('post_id'))
             current_user.put()
             post.put()
-            time.sleep(.1)
+            self.wait_for_eventual_consistancy()
             self.render('home.html', posts = posts)
 
 #Create a new blog post
-class New_post(Handler):
+class NewPost(Handler):
   def get(self):
     self.render('new_entry.html')
 
@@ -248,7 +254,7 @@ class New_post(Handler):
 
 
 #Indivdual blog post page, this is where you can edit or delete a blog post and add comments
-class Post_page(Handler):
+class PostPage(Handler):
   def get(self, post_id):
     post = blogPost.Post.get_by_id(int(post_id))
     sorted_comments = post.blog_comments.order('-created')
@@ -256,7 +262,7 @@ class Post_page(Handler):
       post_id = post_id, comments = sorted_comments)
 
 #Edit a blog post
-class Edit_post(Handler):
+class EditPost(Handler):
   def get(self):
     post_id = self.request.get('post')
     post = blogPost.Post.get_by_id(int(post_id))
@@ -280,11 +286,11 @@ class Edit_post(Handler):
       post.title = updated_title
       post.post = updated_content
       post.put()
-      time.sleep(1)
+      self.wait_for_eventual_consistancy()
       self.redirect('/' + str(post_id), post_id)
 
 #Delete a post - only post author can delete post
-class Delete_post(Handler):
+class DeletePost(Handler):
   def get(self):
     self.redirect('/')
 
@@ -298,7 +304,7 @@ class Delete_post(Handler):
           error='Only post author can delete this post')
       else:
         post.delete()
-        time.sleep(1)
+        self.wait_for_eventual_consistancy()
         self.redirect('/')
 
 #Comment on a blog post - anyone can comment
@@ -317,12 +323,11 @@ class Comment(Handler):
       c = blogPost.Comment(post = post, comment = comment, 
         created_by = created_by)
       c.put()
-      time.sleep(1)
+      self.wait_for_eventual_consistancy()
       self.redirect('/' + str(post_id))
 
-
 #Edit a comment - only comment author can edit
-class Edit_comment(Handler):
+class EditComment(Handler):
   def get(self):
     comment = blogPost.Comment.get_by_id(int(self.request.get('comment')))
     post = blogPost.Post.get_by_id(int(self.request.get('post')))
@@ -344,11 +349,11 @@ class Edit_comment(Handler):
       new_comment = self.request.get('content')
       c.comment = new_comment
       c.put()
-      time.sleep(1)
+      self.wait_for_eventual_consistancy()
       self.redirect('/' + str(c.post.key().id()))
 
 #Delete a commment - only comment author can delete
-class Delete_comment(Handler):
+class DeleteComment(Handler):
   def get(self):
     self.redirect('/')
 
@@ -363,7 +368,7 @@ class Delete_comment(Handler):
           error_id = comment.key().id())
       else:
         comment.delete()
-        time.sleep(0.1)
+        self.wait_for_eventual_consistancy()
         self.render('post_page.html', title = post.title, 
           content = post.post, post_id = post.key().id(), comments = post.blog_comments)
 
@@ -375,16 +380,16 @@ class Logout(Handler):
 
 app = webapp2.WSGIApplication([
     ('/', Home),
-    ('/newpost', New_post),
-    ('/([0-9]+)', Post_page),
+    ('/newpost', NewPost),
+    ('/([0-9]+)', PostPage),
     ('/signup', Register),
     ('/login', Login),
     ('/logout', Logout),
-    ('/edit_post', Edit_post),
-    ('/delete_post', Delete_post),
+    ('/edit_post', EditPost),
+    ('/delete_post', DeletePost),
     ('/comment', Comment),
-    ('/edit_comment', Edit_comment),
-    ('/delete_comment', Delete_comment),
-    ('/like_post', Like_post),
-    ('/unlike_post', Unlike_post)
+    ('/edit_comment', EditComment),
+    ('/delete_comment', DeleteComment),
+    ('/like_post', LikePost),
+    ('/unlike_post', UnlikePost)
 ], debug=True)
