@@ -9,8 +9,7 @@
     <input type="submit">
   </form>
   <p class="error">{{error}}</p>
-  <form method="POST">
-    <input type="hidden" name="post_id" value="{{post_id}}">
-    <input type="submit" class="bottom-button" name="cancel" value="Cancel">
+  <form action="/{{post_id}}" method="GET">
+    <input type="submit" class="bottom-button" value="Cancel">
   </form>
 {% endblock %}

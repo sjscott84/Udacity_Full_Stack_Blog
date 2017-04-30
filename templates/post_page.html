@@ -4,17 +4,18 @@
   <p>{{content}}</p>
   <p class="error">{{error}}</p>
   <div id="outer">
-    <form class="inner" method="POST">
-      <input type="submit" name="delete_post" value="Delete Post">
+    <form action="/delete_post" class="inner" method="POST">
+      <input type="hidden" name="post" value="{{post_id}}">
+      <input type="submit" value="Delete Post">
     </form>
-    <form class="inner" method="POST">
-      <input type="hidden" name="edit_post" value="Edit Post">
-      <input type="submit" value="Edit">
+    <form action="/edit_post" class="inner" method="GET">
+      <input type="hidden" name="post" value="{{post_id}}">
+      <input type="submit" value="Edit Post">
     </form>
   </div>
   <h2>Comments</h2>
-  <form method="POST">
-    <input type="hidden" name="add_comment" value="Add Comment">
+  <form action="/comment" method="GET">
+    <input type="hidden" name="post" value="{{post_id}}">
     <input type="submit" value="Add Comment">
   </form>
   {% for comment in comments %}
@@ -24,19 +25,19 @@
       <p class="error">{{comment_error}}</p>
     {% endif %}
     <div id="outer">
-      <form class="inner" method="POST">
-        <input type="hidden" name="comment_id" value="{{comment.key().id()}}">
-        <input type="hidden" name="delete_comment" value="Edit Comment">
-        <input type="submit" name="Delete" value="Delete Comment">
+      <form action="/delete_comment" class="inner" method="POST">
+        <input type="hidden" name="comment" value="{{comment.key().id()}}">
+        <input type="hidden" name="post" value="{{post_id}}">
+        <input type="submit" value="Delete Comment">
       </form>
-      <form class="inner" method="POST">
-        <input type="hidden" name="comment_id" value="{{comment.key().id()}}">
-        <input type="hidden" name="edit_comment" value="Edit Comment">
+      <form action="/edit_comment" class="inner" method="GET">
+        <input type="hidden" name="comment" value="{{comment.key().id()}}">
+        <input type="hidden" name="post" value="{{post_id}}">
         <input type="submit" value="Edit Comment">
       </form>
     </div>
   {% endfor %}
-  <form method="POST">
+  <form action="/" method="GET">
     <input class="bottom-button" type="submit" name="home" value="Home Page">
   </form>
 {% endblock %}
